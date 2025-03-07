@@ -1,5 +1,6 @@
 <footer class="footer section text-center">
 	<div class="container">
+		<!-- Add VWO Integration Selector -->
 		<div class="row">
 			<div class="col-md-12">
 				<ul class="social-media">
@@ -41,5 +42,125 @@
 				<p class="copyright-text">Copyright &copy;2021, Designed &amp; Developed by <a href="https://themefisher.com/">Themefisher</a></p>
 			</div>
 		</div>
+		<div class="row mb-4">
+			<div class="col-md-12">
+				<div class="vwo-integration-selector">
+					<label for="vwoIntegrationSelect" style="margin-right: 10px;">VWO Integration:</label>
+					<select id="vwoIntegrationSelect" class="form-control" style="display: inline-block; width: auto;">
+						<option value="">Select Integration</option>
+						<!-- Options will be populated dynamically -->
+					</select>
+				</div>
+			</div>
+		</div>
 	</div>
 </footer>
+
+<script>
+	function setCookie(name, value, days) {
+		const d = new Date();
+		d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+		const expires = "expires=" + d.toUTCString();
+		document.cookie = name + "=" + value + ";" + expires + ";path=/";
+	}
+
+	function getCookie(name) {
+		const value = `; ${document.cookie}`;
+		const parts = value.split(`; ${name}=`);
+		if (parts.length === 2) return parts.pop().split(';').shift();
+	}
+
+	function getQueryParam(param) {
+		const urlParams = new URLSearchParams(window.location.search);
+		return urlParams.get(param);
+	}
+
+	function populateIntegrationDropdown(config) {
+		const select = document.getElementById('vwoIntegrationSelect');
+		if (!select) {
+			console.error('Integration select element not found');
+			return;
+		}
+		
+		// Add options from config
+		config.integrations.forEach(integration => {
+			const option = document.createElement('option');
+			option.value = integration.id;
+			option.textContent = integration.name;
+			select.appendChild(option);
+		});
+
+		// Handle selection change
+		select.addEventListener('change', function() {
+			const selectedValue = this.value;
+			setCookie('vwo_integration', selectedValue, 30);
+			
+			// Construct new URL with the selected integration
+			const url = new URL(window.location.href);
+			if (selectedValue) {
+				url.searchParams.set('vwo_integration', selectedValue);
+			} else {
+				url.searchParams.delete('vwo_integration');
+			}
+			
+			// Refresh the page with new URL
+			window.location.href = url.toString();
+		});
+
+		// Set initial value from URL or cookie
+		const integrationFromUrl = getQueryParam('vwo_integration');
+		const savedIntegration = integrationFromUrl || getCookie('vwo_integration');
+		
+		if (savedIntegration) {
+			select.value = savedIntegration;
+		}
+	}
+
+	// Fetch and load configuration with better error handling
+	document.addEventListener('DOMContentLoaded', function() {
+		// Use the correct path to config.json
+		fetch('/integrations/config.json')
+			.then(response => {
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				return response.json();
+			})
+			.then(config => {
+				if (!config || !config.integrations) {
+					throw new Error('Invalid config format');
+				}
+				populateIntegrationDropdown(config);
+			})
+			.catch(error => {
+				console.error('Error loading integrations config:', error);
+				// Add visual feedback for development
+				const select = document.getElementById('vwoIntegrationSelect');
+				if (select) {
+					const option = document.createElement('option');
+					option.value = "";
+					option.textContent = "Error loading integrations";
+					select.appendChild(option);
+					select.disabled = true;
+				}
+			});
+	});
+</script>
+
+<style>
+	.vwo-integration-selector {
+		background: #f8f9fa;
+		padding: 15px;
+		border-radius: 4px;
+		margin-bottom: 20px;
+	}
+
+	.vwo-integration-selector label {
+		font-weight: bold;
+		color: #333;
+	}
+
+	#vwoIntegrationSelect {
+		min-width: 200px;
+	}
+</style>

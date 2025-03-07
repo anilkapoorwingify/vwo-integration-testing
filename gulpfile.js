@@ -19,6 +19,7 @@ var path = {
     js: "source/js/*.js",
     scss: "source/scss/**/*.scss",
     images: "source/images/**/*.+(png|jpg|gif|svg)",
+    integrations: "source/integrations/**/*.*"
   },
   build: {
     dirBuild: "theme/",
@@ -128,6 +129,18 @@ gulp.task("others:build", function () {
   return gulp.src(path.src.others).pipe(gulp.dest(path.build.dirDev));
 });
 
+// Integrations
+gulp.task("integrations:build", function () {
+  return gulp
+    .src(path.src.integrations)
+    .pipe(gulp.dest(path.build.dirDev + "integrations/"))
+    .pipe(
+      bs.reload({
+        stream: true,
+      })
+    );
+});
+
 // Clean Build Folder
 gulp.task("clean", function (cb) {
   rimraf("./theme", cb);
@@ -141,6 +154,7 @@ gulp.task("watch:build", function () {
   gulp.watch(path.src.js, gulp.series("js:build"));
   gulp.watch(path.src.images, gulp.series("images:build"));
   gulp.watch(path.src.plugins, gulp.series("plugins:build"));
+  gulp.watch(path.src.integrations, gulp.series("integrations:build"));
 });
 
 // Dev Task
@@ -154,6 +168,7 @@ gulp.task(
     "images:build",
     "plugins:build",
     "others:build",
+    "integrations:build",
     gulp.parallel("watch:build", function () {
       bs.init({
         server: {
@@ -172,6 +187,7 @@ gulp.task(
     "js:build",
     "scss:build",
     "images:build",
-    "plugins:build"
+    "plugins:build",
+    "integrations:build"
   )
 );

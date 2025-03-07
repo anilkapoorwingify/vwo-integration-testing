@@ -23,6 +23,9 @@
   <meta name="author" content="Themefisher">
   <meta name="generator" content="Themefisher Constra HTML Template v1.0">
   
+  <!-- theme meta -->
+  <meta name="theme-name" content="aviato" />
+  
   <!-- Favicon -->
   <link rel="shortcut icon" type="image/x-icon" href="images/favicon.png" />
   
@@ -40,9 +43,72 @@
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
 
+  <!-- Start VWO Async SmartCode -->
+  <script type='text/javascript'>var account_ids=location.search.split('id=')[1]?location.search.split('id=')[1]:'677809';window._vwo_code=window._vwo_code||(function(){var account_id=account_ids,settings_tolerance=8000,library_tolerance=8000,use_existing_jquery=false,is_spa=1,hide_element='body',f=false,d=document,code={use_existing_jquery:function(){return use_existing_jquery;},library_tolerance:function(){return library_tolerance;},finish:function(){if(!f){f=true;var a=d.getElementById('_vis_opt_path_hides');if(a)a.parentNode.removeChild(a);}},finished:function(){return f;},load:function(a){var b=d.createElement('script');b.src=a;b.type='text/javascript';b.innerText;b.onerror=function(){_vwo_code.finish();};d.getElementsByTagName('head')[0].appendChild(b);},init:function(){window.settings_timer=setTimeout('_vwo_code.finish()',settings_tolerance);var a=d.createElement('style'),b=hide_element?hide_element+'{opacity:0 !important;filter:alpha(opacity=0) !important;background:none !important;}':'',h=d.getElementsByTagName('head')[0];a.setAttribute('id','_vis_opt_path_hides');a.setAttribute('type','text/css');if(a.styleSheet)a.styleSheet.cssText=b;else a.appendChild(d.createTextNode(b));h.appendChild(a);this.load('https://dev.visualwebsiteoptimizer.com/j.php?a='+account_id+'&u='+encodeURIComponent(d.URL)+'&f='+(+is_spa)+'&r='+Math.random());return settings_timer;}};window._vwo_settings_timer=code.init();return code;}());</script>
+  <!-- End VWO Async SmartCode -->
+
+  <!-- VWO Script Loader -->
+  <script>
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    function loadIntegrationHTML() {
+        const urlParams = new URLSearchParams(window.location.search);
+        // First check URL parameter, then fall back to cookie
+        const integration = urlParams.get('vwo_integration') || getCookie('vwo_integration');
+        
+        if (integration) {
+            // Remove any existing integration scripts
+            const existingScripts = document.querySelectorAll('script[data-integration]');
+            existingScripts.forEach(script => script.remove());
+
+            // Fetch and inject the integration HTML
+            fetch(`/integrations/${integration}.html`)
+                .then(response => response.text())
+                .then(html => {
+                    // Create a temporary container
+                    const container = document.createElement('div');
+                    container.innerHTML = html;
+
+                    // Extract and execute scripts
+                    const scripts = container.getElementsByTagName('script');
+                    Array.from(scripts).forEach(script => {
+                        const newScript = document.createElement('script');
+                        newScript.setAttribute('data-integration', integration);
+                        
+                        // Copy all attributes
+                        Array.from(script.attributes).forEach(attr => {
+                            if (attr.name !== 'data-integration') {
+                                newScript.setAttribute(attr.name, attr.value);
+                            }
+                        });
+
+                        // Copy inline script content if any
+                        if (script.innerHTML) {
+                            newScript.innerHTML = script.innerHTML;
+                        }
+
+                        // Add to document head
+                        document.head.appendChild(newScript);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading integration HTML:', error);
+                });
+        }
+    }
+
+    // Load integration HTML immediately
+    loadIntegrationHTML();
+  </script>
+
 </head>
 
 <body id="body">
+
 
 <!-- Start Top Header Bar -->
 <section class="top-header">
@@ -511,6 +577,7 @@
 
 <footer class="footer section text-center">
 	<div class="container">
+		<!-- Add VWO Integration Selector -->
 		<div class="row">
 			<div class="col-md-12">
 				<ul class="social-media">
@@ -552,8 +619,128 @@
 				<p class="copyright-text">Copyright &copy;2021, Designed &amp; Developed by <a href="https://themefisher.com/">Themefisher</a></p>
 			</div>
 		</div>
+		<div class="row mb-4">
+			<div class="col-md-12">
+				<div class="vwo-integration-selector">
+					<label for="vwoIntegrationSelect" style="margin-right: 10px;">VWO Integration:</label>
+					<select id="vwoIntegrationSelect" class="form-control" style="display: inline-block; width: auto;">
+						<option value="">Select Integration</option>
+						<!-- Options will be populated dynamically -->
+					</select>
+				</div>
+			</div>
+		</div>
 	</div>
 </footer>
+
+<script>
+	function setCookie(name, value, days) {
+		const d = new Date();
+		d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+		const expires = "expires=" + d.toUTCString();
+		document.cookie = name + "=" + value + ";" + expires + ";path=/";
+	}
+
+	function getCookie(name) {
+		const value = `; ${document.cookie}`;
+		const parts = value.split(`; ${name}=`);
+		if (parts.length === 2) return parts.pop().split(';').shift();
+	}
+
+	function getQueryParam(param) {
+		const urlParams = new URLSearchParams(window.location.search);
+		return urlParams.get(param);
+	}
+
+	function populateIntegrationDropdown(config) {
+		const select = document.getElementById('vwoIntegrationSelect');
+		if (!select) {
+			console.error('Integration select element not found');
+			return;
+		}
+		
+		// Add options from config
+		config.integrations.forEach(integration => {
+			const option = document.createElement('option');
+			option.value = integration.id;
+			option.textContent = integration.name;
+			select.appendChild(option);
+		});
+
+		// Handle selection change
+		select.addEventListener('change', function() {
+			const selectedValue = this.value;
+			setCookie('vwo_integration', selectedValue, 30);
+			
+			// Construct new URL with the selected integration
+			const url = new URL(window.location.href);
+			if (selectedValue) {
+				url.searchParams.set('vwo_integration', selectedValue);
+			} else {
+				url.searchParams.delete('vwo_integration');
+			}
+			
+			// Refresh the page with new URL
+			window.location.href = url.toString();
+		});
+
+		// Set initial value from URL or cookie
+		const integrationFromUrl = getQueryParam('vwo_integration');
+		const savedIntegration = integrationFromUrl || getCookie('vwo_integration');
+		
+		if (savedIntegration) {
+			select.value = savedIntegration;
+		}
+	}
+
+	// Fetch and load configuration with better error handling
+	document.addEventListener('DOMContentLoaded', function() {
+		// Use the correct path to config.json
+		fetch('/integrations/config.json')
+			.then(response => {
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				return response.json();
+			})
+			.then(config => {
+				if (!config || !config.integrations) {
+					throw new Error('Invalid config format');
+				}
+				populateIntegrationDropdown(config);
+			})
+			.catch(error => {
+				console.error('Error loading integrations config:', error);
+				// Add visual feedback for development
+				const select = document.getElementById('vwoIntegrationSelect');
+				if (select) {
+					const option = document.createElement('option');
+					option.value = "";
+					option.textContent = "Error loading integrations";
+					select.appendChild(option);
+					select.disabled = true;
+				}
+			});
+	});
+</script>
+
+<style>
+	.vwo-integration-selector {
+		background: #f8f9fa;
+		padding: 15px;
+		border-radius: 4px;
+		margin-bottom: 20px;
+	}
+
+	.vwo-integration-selector label {
+		font-weight: bold;
+		color: #333;
+	}
+
+	#vwoIntegrationSelect {
+		min-width: 200px;
+	}
+</style>
 
     <!-- 
     Essential Scripts
@@ -565,8 +752,7 @@
     <script src="plugins/bootstrap/js/bootstrap.min.js"></script>
     <!-- Bootstrap Touchpin -->
     <script src="plugins/bootstrap-touchspin/dist/jquery.bootstrap-touchspin.min.js"></script>
-    <!-- Instagram Feed Js -->
-    <script src="plugins/instafeed/instafeed.min.js"></script>
+    
     <!-- Video Lightbox Plugin -->
     <script src="plugins/ekko-lightbox/dist/ekko-lightbox.min.js"></script>
     <!-- Count Down Js -->

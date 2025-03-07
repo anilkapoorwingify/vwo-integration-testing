@@ -1,0 +1,20 @@
+{
+    "integrations": [
+        {
+            "id": "aem",
+            "name": "Adobe Experience Platform"
+        },
+        {
+            "id": "six-sense",
+            "name": "6sense"
+        },
+        {
+            "id": "google-analytics",
+            "name": "Google Analytics 4"
+        },
+        {
+            "id": "google-tag-manager",
+            "name": "Google Tag Manager"
+        }
+    ]
+} 
